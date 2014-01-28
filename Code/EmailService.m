@@ -27,7 +27,6 @@ static EmailService *_manager;
         mailer.mailComposeDelegate = self;
         mailer.modalPresentationStyle = UIModalPresentationPageSheet;
         [mailer setSubject:[params objectForKey:@"title"]];
-        
         NSString *emailBody = [[params objectForKey:@"url"] absoluteString];
         [mailer setMessageBody:emailBody isHTML:NO];
         [viewController presentModalViewController:mailer animated:YES];

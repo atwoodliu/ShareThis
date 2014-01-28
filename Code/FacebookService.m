@@ -3,7 +3,7 @@
 #import "FacebookService.h"
 #import <FacebookSDK/FacebookSDK.h>
 #import <Social/Social.h>
-#import "REComposeViewController.h"
+#import <REComposeViewController/REComposeViewController.h>
 
 static FacebookService *_manager;
 

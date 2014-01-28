@@ -1,16 +1,22 @@
 /* Copyright 2012 IGN Entertainment, Inc. */
 
 #import "ShareThis.h"
+
+
 #import "InstapaperActivityItem.h"
 #import "PocketActivityItem.h"
+#import "LineActivityItem.h"
 #import "TwitterService.h"
 #import "FacebookService.h"
 #import "EmailService.h"
+#import "LineService.h"
 #import "MessageService.h"
 #import "InstapaperService.h"
 #import "PocketService.h"
 #import "ReadabilityService.h"
 #import "ReadabilityActivityItem.h"
+
+#import "EZKTracker.h"
 
 static ShareThis *_manager;
 NSString *const AppDidBecomeActiveNotificationName = @"appDidBecomeActive";
@@ -49,12 +55,13 @@ NSString *const AppWillTerminateNotificationName = @"appWillTerminate";
 
 // Save dictionary with given parameters
 // Need this so UIActionSheet delegate can have access to the parameters
-- (NSDictionary *)saveDictionaryWithUrl:(NSURL *)url title:(NSString *)title image:(UIImage *)image
+- (NSDictionary *)saveDictionaryWithUrl:(NSURL *)url title:(NSString *)title image:(UIImage *)image contentId:(NSString *)contentId
 {
     self.params = [[NSDictionary alloc] initWithObjectsAndKeys:
      url ? url : @"", @"url",
      title ? title : @"", @"title",
-     image, @"image",
+    image?image:@"", @"image",
+                   contentId?contentId:@"", @"contentId",
      nil];
     
     return self.params;
@@ -69,67 +76,73 @@ NSString *const AppWillTerminateNotificationName = @"appWillTerminate";
 
 #pragma mark Sharing
 // Perform the type of sharing service with passed in parameters
-+ (void)shareURL:(NSURL *) url title:(NSString *)title image:(UIImage *)image withService:(STServiceType)service  onViewController:(UIViewController *)viewController
-{
-    // Save the view to later use it to show/dismiss services
-    [[ShareThis sharedManager] saveViewController:viewController];
-    // Save the params to share
-    NSDictionary *params = [[ShareThis sharedManager] saveDictionaryWithUrl:url title:title image:image];
-    switch (service) {
-        case STServiceTypeFacebook:
-            [FacebookService shareWithParams:params onViewController:viewController];
-            break;
-        case STServiceTypeTwitter:
-            [TwitterService shareWithParams:params onViewController:viewController];
-            break;
-        case STServiceTypeMail:
-            [EmailService shareWithParams:params onViewController:viewController];
-            break;
-        case STServiceTypeMessage:
-            [MessageService shareWithParams:params onViewController:viewController];
-            break;
-        case STServiceTypeInstapaper:
-            [InstapaperService shareWithParams:params onViewController:viewController];
-            break;
-        case STServiceTypePocket:
-            if ([[ShareThis sharedManager] pocketAPIKey]) {
-                [PocketService shareWithParams:params onViewController:viewController];
-            }
-            break;
-        case STServiceTypeReadability:
-            if ([[ShareThis sharedManager] readabilityKey] && [[ShareThis sharedManager] readabilitySecret]) {
-                [ReadabilityService shareWithParams:params onViewController:viewController];
-            }
-            break;
-        case STServiceTypeServiceCount:
-        default:
-            break;
-    }
-}
+//+ (void)shareURL:(NSURL *) url title:(NSString *)title image:(UIImage *)image withService:(STServiceType)service  onViewController:(UIViewController *)viewController
+//{
+//    // Save the view to later use it to show/dismiss services
+//    [[ShareThis sharedManager] saveViewController:viewController];
+//    // Save the params to share
+//    NSDictionary *params = [[ShareThis sharedManager] saveDictionaryWithUrl:url title:title image:image];
+//    switch (service) {
+//        case STServiceTypeFacebook:
+//            [FacebookService shareWithParams:params onViewController:viewController];
+//            break;
+//        case STServiceTypeTwitter:
+//            [TwitterService shareWithParams:params onViewController:viewController];
+//            break;
+//        case STServiceTypeMail:
+//            [EmailService shareWithParams:params onViewController:viewController];
+//            break;
+//        case STServiceTypeMessage:
+//            [MessageService shareWithParams:params onViewController:viewController];
+//            break;
+//        case STServiceTypeInstapaper:
+//            [InstapaperService shareWithParams:params onViewController:viewController];
+//            break;
+//        case STServiceTypePocket:
+//            if ([[ShareThis sharedManager] pocketAPIKey]) {
+//                [PocketService shareWithParams:params onViewController:viewController];
+//            }
+//            break;
+//        case STServiceTypeReadability:
+//            if ([[ShareThis sharedManager] readabilityKey] && [[ShareThis sharedManager] readabilitySecret]) {
+//                [ReadabilityService shareWithParams:params onViewController:viewController];
+//            }
+//            break;
+//        case STServiceTypeServiceCount:
+//        default:
+//            break;
+//    }
+//}
 
 #pragma mark ActionSheet / ActivityView
-+ (void)showShareOptionsToShareUrl:(NSURL *)url title:(NSString *)title image:(UIImage *)image onViewController:(UIViewController *)viewController
++ (void)showShareOptionsToShareUrl:(NSURL *)url title:(NSString *)title image:(UIImage *)image contentId:(NSString *)contentId onViewController:(UIViewController *)viewController
 {
     [[ShareThis sharedManager] setContentType:STContentTypeAll];
-    [[ShareThis sharedManager] showShareOptionsToShareUrl:url title:title image:image onViewController:viewController];
+    [[ShareThis sharedManager] showShareOptionsToShareUrl:url title:title image:image contentId:contentId onViewController:viewController];
 }
 
-+ (void)showShareOptionsToShareUrl:(NSURL *)url title:(NSString *)title image:(UIImage *)image onViewController:(UIViewController *)viewController forTypeOfContent:(STContentType)contentType
-{
-    [[ShareThis sharedManager] setContentType:contentType];
-    [[ShareThis sharedManager] showShareOptionsToShareUrl:url title:title image:image onViewController:viewController];
-}
+//+ (void)showShareOptionsToShareUrl:(NSURL *)url title:(NSString *)title image:(UIImage *)image onViewController:(UIViewController *)viewController forTypeOfContent:(STContentType)contentType
+//{
+//    [[ShareThis sharedManager] setContentType:contentType];
+//    [[ShareThis sharedManager] showShareOptionsToShareUrl:url title:title image:image onViewController:viewController];
+//}
 
-- (void)showShareOptionsToShareUrl:(NSURL *)url title:(NSString *)title image:(UIImage *)image onViewController:(UIViewController *)viewController
+- (void)showShareOptionsToShareUrl:(NSURL *)url title:(NSString *)title image:(UIImage *)image contentId:(NSString *)contentId onViewController:(UIViewController *)viewController
 {
     // Save the view to later use it to show/dismiss services
     [self saveViewController:viewController];
     // Save the params to share
-    [self saveDictionaryWithUrl:url title:title image:image];
+    [self saveDictionaryWithUrl:url title:title image:image contentId:contentId];
     // Show ios6+ activity view if available, if not then use action sheet
     if ([ShareThis isSocialAvailable]) {
+#if LOG_ShareThis
+        NSLog(@"ShareThis: isSocialAvailable");
+#endif
         [self showActivityView];
     } else {
+#if LOG_ShareThis
+        NSLog(@"ShareThis: is not SocialAvailable");
+#endif
         [self showActionSheet];
     }
 }
@@ -138,6 +151,7 @@ NSString *const AppWillTerminateNotificationName = @"appWillTerminate";
 - (void)showActivityView
 {
     NSArray *activityItems = [[NSArray alloc] initWithObjects:[self.params objectForKey:@"title"], [self.params objectForKey:@"url"], [self.params objectForKey:@"image"], nil];
+    LineActivityItem *lineActivity = [[LineActivityItem alloc] init];
     InstapaperActivityItem *instapaperActivity = [[InstapaperActivityItem alloc] init];
     PocketActivityItem *pocketActivity = [[PocketActivityItem alloc] init];
     ReadabilityActivityItem *readabilityActivity = [[ReadabilityActivityItem alloc] init];
@@ -147,14 +161,19 @@ NSString *const AppWillTerminateNotificationName = @"appWillTerminate";
     switch (self.contentType) {
         case STContentTypeAll:
         case STContentTypeArticle:
-            applicationActivities = [NSMutableArray arrayWithObject:instapaperActivity];
-            
+            applicationActivities = [[NSMutableArray alloc] init];
+            if (self.instapaperAPIKey) {
+                [applicationActivities addObject:instapaperActivity];
+            }
             if (self.pocketAPIKey) {
                 [applicationActivities addObject:pocketActivity];
             }
             
             if (self.readabilityKey && self.readabilitySecret) {
                 [applicationActivities addObject:readabilityActivity];
+            }
+            if ([LineService isLineInstalled]) {
+                [applicationActivities addObject:lineActivity];
             }
             break;
         case STContentTypeVideo:
@@ -163,12 +182,23 @@ NSString *const AppWillTerminateNotificationName = @"appWillTerminate";
         default:
             break;
     }
-    
     UIActivityViewController *activityVC =
     [[UIActivityViewController alloc] initWithActivityItems:activityItems
                                       applicationActivities:applicationActivities];
+    [activityVC setValue:[self.params objectForKey:@"title"] forKey:@"subject"];
     activityVC.excludedActivityTypes = @[UIActivityTypeAssignToContact, UIActivityTypePostToWeibo, UIActivityTypePrint, UIActivityTypeSaveToCameraRoll];
+    activityVC.completionHandler = ^(NSString *activityType, BOOL completed) {
+#if EnableTracking
+        [[EZKTracker sharedInstance] share:[self.params objectForKey:@"contentId"] title:[self.params objectForKey:@"title"] method:activityType];
+#endif
+        if (completed) {
+            NSLog(@"The selected activity was %@", activityType);
+        }
+    };
     [self.viewControllerToShowServiceOn presentViewController:activityVC animated:YES completion:nil];
+#if LOG_ShareThis
+    NSLog(@"%d activity items. %d excludedActivityTypes", activityItems.count, activityVC.excludedActivityTypes.count);
+#endif
 }
 
 // Show action sheet

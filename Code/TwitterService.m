@@ -31,13 +31,15 @@
         [viewController presentViewController:slComposeSheet animated:YES completion:nil];
         
     } else {
-        // Create the view controller
-        TWTweetComposeViewController *twitter = [[TWTweetComposeViewController alloc] init];
-        [twitter addURL:[params objectForKey:@"url"]];
-        [twitter addImage:[params objectForKey:@"image"]];
-        [twitter setInitialText:[params objectForKey:@"title"]];
-        // Show twitter view on passed in viewcontroller
-        [viewController presentViewController:twitter animated:YES completion:nil];
+        NSLog(@"No Social Framework in iOS5");
+        
+//        // Create the view controller
+//        TWTweetComposeViewController *twitter = [[TWTweetComposeViewController alloc] init];
+//        [twitter addURL:[params objectForKey:@"url"]];
+//        [twitter addImage:[params objectForKey:@"image"]];
+//        [twitter setInitialText:[params objectForKey:@"title"]];
+//        // Show twitter view on passed in viewcontroller
+//        [viewController presentViewController:twitter animated:YES completion:nil];
     }
 
 }
