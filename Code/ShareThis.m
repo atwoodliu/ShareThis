@@ -189,10 +189,12 @@ NSString *const AppWillTerminateNotificationName = @"appWillTerminate";
     activityVC.excludedActivityTypes = @[UIActivityTypeAssignToContact, UIActivityTypePostToWeibo, UIActivityTypePrint, UIActivityTypeSaveToCameraRoll];
     activityVC.completionHandler = ^(NSString *activityType, BOOL completed) {
 #if EnableTracking
-        [[EZKTracker sharedInstance] share:[self.params objectForKey:@"contentId"] title:[self.params objectForKey:@"title"] method:activityType];
+        [[EZKTracker sharedInstance] toShare:[self.params objectForKey:@"contentId"] title:[self.params objectForKey:@"title"]];
 #endif
         if (completed) {
-            NSLog(@"The selected activity was %@", activityType);
+#if EnableTracking
+            [[EZKTracker sharedInstance] share:[self.params objectForKey:@"contentId"] title:[self.params objectForKey:@"title"] method:activityType];
+#endif
         }
     };
     [self.viewControllerToShowServiceOn presentViewController:activityVC animated:YES completion:nil];
